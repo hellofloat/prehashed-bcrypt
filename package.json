@@ -1,0 +1,25 @@
+{
+  "name": "prehashed-bcrypt",
+  "version": "0.1.0",
+  "description": "Wrapper to pre-hash arbitrary length passwords before bcrypting.",
+  "license": "MIT",
+  "author": {
+    "name": "Andy Burke",
+    "email": "aburke@bitflood.org",
+    "url": "https://github.com/andyburke"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hellofloat/prehashed-bcrypt.git"
+  },
+  "scripts": {
+    "test": "mocha --recursive -R spec"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.2.0"
+  },
+  "devDependencies": {
+    "better-assert": "^1.0.2",
+    "mocha": "^2.2.5"
+  }
+}
