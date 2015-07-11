@@ -28,12 +28,12 @@ prehashedBcrypt.hash( password, 'sha384', function( error, hash ) {
 
 ## Methods
 
-### hash( <string to hash>, <node.js crypto-provided hashing algorithm>, <callback> )
+### hash( [string to hash], [node.js crypto-provided hashing algorithm], [callback] )
 
 Hashes the input string using the selected node.js crypto hashing algorithm, then
 bcrypts the result. callback is a standard node.js callback: function( error, hash )
 
-### check( <string to check>, <crypto algorithm>, <existing hash>, <callback> )
+### check( [string to check], [crypto algorithm], [existing hash], [callback] )
 
 This checks the given string, pre-hashed using the given crypto algorithm against the
 specified existing hash. callback is a standard node.js callback: function( error, result )
