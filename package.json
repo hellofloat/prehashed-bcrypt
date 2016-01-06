@@ -1,6 +1,6 @@
 {
   "name": "prehashed-bcrypt",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Wrapper to pre-hash arbitrary length passwords before bcrypting.",
   "license": "MIT",
   "author": {
