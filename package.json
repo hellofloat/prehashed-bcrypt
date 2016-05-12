@@ -1,6 +1,6 @@
 {
   "name": "prehashed-bcrypt",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Wrapper to pre-hash arbitrary length passwords before bcrypting.",
   "license": "MIT",
   "author": {
@@ -13,13 +13,14 @@
     "url": "https://github.com/hellofloat/prehashed-bcrypt.git"
   },
   "scripts": {
-    "test": "mocha --recursive -R spec"
+    "test": "tape test/**/*.js | tap-spec"
   },
   "dependencies": {
-    "bcryptjs": "^2.2.0"
+    "bcryptjs": "^2.3.0"
   },
   "devDependencies": {
-    "better-assert": "^1.0.2",
-    "mocha": "^2.2.5"
+    "async": "^2.0.0-rc.4",
+    "tap-spec": "^4.1.1",
+    "tape": "^4.5.1"
   }
 }

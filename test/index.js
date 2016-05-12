@@ -1,34 +1,33 @@
-/* global describe, it */
 'use strict';
 
-var assert = require( 'better-assert' );
-var prehashedBcrypt = require( '../index.js' );
+const async = require( 'async' );
+const prehashedBcrypt = require( '../index.js' );
+const test = require( 'tape' );
 
-
-describe( 'hashing', function() {
-    var password = 'hello';
-
-    it( 'hashes', function() {
-        prehashedBcrypt.hash( password, 'sha384', function( error, hash ) {
-            assert( error === null );
-            assert( hash !== undefined );
-        } );
-    } );
-
-    it( 'errors when pre-hashing algorithm output too long', function() {
-        prehashedBcrypt.hash( password, 'sha512', function( error, hash ) {
-            assert( error !== null );
-            assert( hash === undefined );
-        } );
+test( 'hashes', ( t ) => {
+    prehashedBcrypt.hash( 'password', 'sha384', function( error, hash ) {
+        t.error( error, 'no error' );
+        t.ok( hash, 'hashed' );
+        t.end();
     } );
 } );
 
-describe( 'hashing long password', function() {
-    var shortPasswordChars = [];
-    var longPasswordChars = [];
+test( 'errors when pre-hashing algorithm output too long', ( t ) => {
+    prehashedBcrypt.hash( 'password', 'sha512', function( error, hash ) {
+        t.ok( error, 'got error' );
+        t.notOk( hash, 'no hash' );
+        t.end();
+    } );
+} );
 
-    var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-    for ( var i = 0; i < 256; ++i ) {
+const data = {};
+
+test( 'create passwords', ( t ) => {
+    let shortPasswordChars = [];
+    let longPasswordChars = [];
+
+    const possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    for ( var i = 0; i < 1024; ++i ) {
         var char = possible.charAt( Math.floor( Math.random() * possible.length ) );
         if ( i < 72 ) {
             shortPasswordChars.push( char );
@@ -37,67 +36,109 @@ describe( 'hashing long password', function() {
         longPasswordChars.push( char );
     }
 
-    var shortPassword = shortPasswordChars.join( '' );
-    var longPassword = longPasswordChars.join( '' );
+    data.shortPassword = shortPasswordChars.join( '' );
+    data.longPassword = longPasswordChars.join( '' );
 
-    it ( 'bcrypt sees no difference', function() {
-        prehashedBcrypt.hash( shortPassword, null, function( error, shortHash ) {
-            assert( error === null );
-            assert( shortHash !== undefined );
+    t.ok( data.shortPassword, 'generated short password' );
+    t.equal( data.shortPassword.length, 72, 'short password is 72 chars long' );
+    t.ok( data.longPassword, 'generated long password' );
+    t.equal( data.longPassword.length, 1024, 'long password is 1024 chars long' );
+    t.notEqual( data.shortPassword, data.longPassword, 'short and long generated passwords differ' );
+    t.end();
+} );
 
-            prehashedBcrypt.hash( longPassword, null, function( error, longHash ) {
-                assert( error === null );
-                assert( longHash !== undefined );
-
-                prehashedBcrypt.check( longPassword, null, shortHash, function( error, result ) {
-                    assert( error === null );
-                    assert( result === true );
-                } );
+test( 'plain bcrypt sees short and long passwords as the same', ( t ) => {
+    let shortBcrypted = null;
+    let longBcrypted = null;
+    async.series( [
+        next => {
+            prehashedBcrypt.hash( data.shortPassword, null, ( error, _shortBcrypted ) => {
+                shortBcrypted = _shortBcrypted;
+                t.ok( shortBcrypted, 'bcrypted short password' );
+                next( error );
             } );
-        } );
+        },
+
+        next => {
+            prehashedBcrypt.hash( data.longPassword, null, ( error, _longBcrypted ) => {
+                longBcrypted = _longBcrypted;
+                t.ok( longBcrypted, 'bcrypted long password' );
+                next( error );
+            } );
+        },
+
+        next => {
+            prehashedBcrypt.check( data.longPassword, null, shortBcrypted, ( error, result ) => {
+                t.ok( result, 'plain bcrypt thinks the long password and short bcrypted result go together fine' );
+                next( error );
+            } );
+        }
+    ], ( error ) => {
+        if ( error ) {
+            t.fail( error );
+        }
+
+        t.end();
     } );
+} );
 
-    var shortHash;
-    var longHash;
-
-    it( 'hashes short', function() {
-        prehashedBcrypt.hash( shortPassword, 'sha384', function( error, hash ) {
-            assert( error === null );
-            assert( hash !== undefined );
-            shortHash = hash;
-        } );
+test( 'hash+bcrypt short password', ( t ) => {
+    prehashedBcrypt.hash( data.shortPassword, 'sha384', ( error, bcrypted ) => {
+        t.error( error, 'no error' );
+        t.ok( bcrypted, 'hashed+bcrypted' );
+        data.shortHash = bcrypted;
+        t.end();
     } );
+} );
 
-    it( 'hashes long', function() {
-        prehashedBcrypt.hash( longPassword, 'sha384', function( error, hash ) {
-            assert( error === null );
-            assert( hash !== undefined );
-            longHash = hash;
-        } );
+test( 'hash+bcrypt long password', ( t ) => {
+    prehashedBcrypt.hash( data.longPassword, 'sha384', ( error, bcrypted ) => {
+        t.error( error, 'no error' );
+        t.ok( bcrypted, 'hashed+bcrypted' );
+        data.longHash = bcrypted;
+        t.end();
     } );
+} );
 
-    it( 'short and long hashes differ', function() {
-        assert( shortHash !== longHash );
-    } );
+test( 'short and long hashes differ', ( t ) => {
+    t.notEqual( data.shortHash, data.longHash, 'different' );
+    t.end();
+} );
 
-    it( 'short checks ok', function() {
-        prehashedBcrypt.check( shortPassword, 'sha384', shortHash, function( error, result ) {
-            assert( error === null );
-            assert( result === true );
-        } );
-    } );
+test( 'password hashes differ correctly', ( t ) => {
+    async.series( [
+        next => {
+            prehashedBcrypt.check( data.shortPassword, 'sha384', data.shortHash, ( error, result ) => {
+                t.ok( result, 'short password vs. short hash check passed' );
+                next( error );
+            } );
+        },
 
-    it( 'long checks ok', function() {
-        prehashedBcrypt.check( longPassword, 'sha384', longHash, function( error, result ) {
-            assert( error === null );
-            assert( result === true );
-        } );
-    } );
+        next => {
+            prehashedBcrypt.check( data.longPassword, 'sha384', data.longHash, ( error, result ) => {
+                t.ok( result, 'long password vs. long hash check passed' );
+                next( error );
+            } );
+        },
 
-    it( 'long will not check ok for short', function() {
-        prehashedBcrypt.check( longPassword, 'sha384', shortHash, function( error, result ) {
-            assert( error === null );
-            assert( result === false );
-        } );
+        next => {
+            prehashedBcrypt.check( data.shortPassword, 'sha384', data.longHash, ( error, result ) => {
+                t.notOk( result, 'short password vs. long hash check failed' );
+                next( error );
+            } );
+        },
+
+        next => {
+            prehashedBcrypt.check( data.longPassword, 'sha384', data.shortHash, ( error, result ) => {
+                t.notOk( result, 'long password vs. short hash check failed' );
+                next( error );
+            } );
+        }
+    ], ( error ) => {
+        if ( error ) {
+            t.fail( error );
+        }
+
+        t.end();
     } );
 } );

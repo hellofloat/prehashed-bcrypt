@@ -29,7 +29,7 @@ module.exports = {
                 return;
             }
 
-            bcrypt.hash( hashed, 10, callback );
+            bcrypt.hash( hashed, 12, callback );
         } );
     },
 
